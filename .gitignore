@@ -1,0 +1,14 @@
+# Ignore Python virtual environments
+venv/
+__pycache__/
+
+# Ignore Node.js dependencies
+node_modules/
+
+# Ignore database files
+*.sqlite3
+.env
+
+# Ignore logs and system files
+*.log
+.DS_Store
