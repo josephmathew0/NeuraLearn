@@ -35,17 +35,20 @@ def submit_response():
     if not question:
         return jsonify({"error": "Question not found"}), 404
 
-    # ✅ 2️⃣ Check if the answer is correct
+    # ✅ 2️⃣ Check correctness
     correctness = (answer == question.correct_answer.strip().lower())
 
     # ✅ 3️⃣ If incorrect, check for misconceptions
     feedback_message = "❌ Incorrect! Try again."
     if not correctness:
-        misconception = Misconception.query.filter_by(question_id=question_id, pattern=answer).first()
+        misconception = Misconception.query.filter(
+            Misconception.question_id == question_id,
+            Misconception.pattern.ilike(answer)  # ✅ Fix: Case-insensitive match
+        ).first()
         if misconception:
             feedback_message = f"❌ Incorrect! {misconception.feedback}"
 
-    # ✅ 4️⃣ Store response in the database
+    # ✅ 4️⃣ Store response
     response = Response(user_id=user_id, question_id=question_id, answer=answer, correctness=correctness)
     db.session.add(response)
     db.session.commit()
@@ -55,3 +58,4 @@ def submit_response():
         "message": "Response recorded!",
         "feedback": "✅ Correct!" if correctness else feedback_message
     })
+
