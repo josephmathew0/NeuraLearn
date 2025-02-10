@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchQuestions, submitAnswer } from "./services/api";
+import { fetchQuestions, submitAnswer, validateSQLQuery } from "./services/api";  
 
 const Quiz = () => {
   const [questions, setQuestions] = useState([]);
@@ -18,11 +18,24 @@ const Quiz = () => {
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
   };
 
-  const handleSubmit = async (questionId) => {
+  const handleSubmit = async (questionId, questionType) => {
     const userAnswer = answers[questionId];
     if (!userAnswer) {
       alert("Please select or enter an answer before submitting.");
       return;
+    }
+
+    // ✅ If it's an SQL question, validate before submission
+    if (questionType === "sql") {
+      const validationResult = await validateSQLQuery(userAnswer);
+
+      if (validationResult.validation.length > 0) {
+        setFeedback((prev) => ({
+          ...prev,
+          [questionId]: validationResult.validation.join("\n"),  // ✅ Display SQL errors
+        }));
+        return;  // Stop submission if SQL errors exist
+      }
     }
 
     try {
