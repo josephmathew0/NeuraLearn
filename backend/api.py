@@ -1,12 +1,15 @@
+import random
+import json
 from flask import Blueprint, jsonify, request
 from models import db, User, Question, Response, Misconception
 from flask_cors import cross_origin
+from flask_sql_validator_api import SQLValidator  # ✅ Import the class, not the function
+from utils import check_similarity, find_misconception, select_feedback  # Import similarity & feedback functions
 
 api = Blueprint("api", __name__)
 
-# ✅ 1️⃣ Get All Questions (This was missing)
 @api.route("/api/questions", methods=["GET"])
-@cross_origin()  # ✅ Allow CORS for frontend access
+@cross_origin()
 def get_questions():
     questions = Question.query.all()
     return jsonify([
@@ -20,8 +23,6 @@ def get_questions():
         for q in questions
     ])
 
-
-# ✅ 2️⃣ Submit a User Response (Already exists)
 @api.route("/api/responses", methods=["POST"])
 @cross_origin()
 def submit_response():
@@ -30,32 +31,57 @@ def submit_response():
     question_id = data.get("question_id")
     answer = data.get("answer").strip().lower()
 
-    # ✅ 1️⃣ Get the correct answer
     question = Question.query.get(question_id)
     if not question:
         return jsonify({"error": "Question not found"}), 404
 
-    # ✅ 2️⃣ Check correctness
-    correctness = (answer == question.correct_answer.strip().lower())
+    correct_answers = [ans.strip().lower() for ans in json.loads(question.correct_answer)]
+    
+    similarity_score = check_similarity(answer, correct_answers)
+    if similarity_score >= 0.8:
+        correctness = True
+        feedback_message = "✅ Correct!"
+    else:
+        correctness = False
 
-    # ✅ 3️⃣ If incorrect, check for misconceptions
-    feedback_message = "❌ Incorrect! Try again."
-    if not correctness:
-        misconception = Misconception.query.filter(
-            Misconception.question_id == question_id,
-            Misconception.pattern.ilike(answer)  # ✅ Fix: Case-insensitive match
-        ).first()
-        if misconception:
-            feedback_message = f"❌ Incorrect! {misconception.feedback}"
+        misconception = find_misconception(answer, question_id)
+        print("🔍 Debug: Found Misconception:", misconception)  # ✅ Debug output
 
-    # ✅ 4️⃣ Store response
+        feedback_message = select_feedback(misconception)
+        print("🔍 Debug: Selected Feedback:", feedback_message)  # ✅ Debug output
+
     response = Response(user_id=user_id, question_id=question_id, answer=answer, correctness=correctness)
     db.session.add(response)
     db.session.commit()
 
+    print("🔍 Debug: Final API Response:", {
+    "correct": correctness,
+    "message": "Response recorded!",
+    "feedback": feedback_message
+    })
+
     return jsonify({
         "correct": correctness,
         "message": "Response recorded!",
-        "feedback": "✅ Correct!" if correctness else feedback_message
+        "feedback": feedback_message
     })
 
+@api.route("/api/validate_sql", methods=["POST"])
+@cross_origin()
+def validate_sql_query():
+    data = request.get_json()
+    query = data.get("query", "")
+
+    if not query:
+        return jsonify({"error": "No SQL query provided"}), 400
+
+    validator = SQLValidator(query)
+    validation_results = validator.validate()
+
+    return jsonify({"query": query, "validation": validation_results})
+
+
+@api.route('/api/misconceptions', methods=['GET'])  # ✅ Add /api prefix
+def get_misconceptions():
+    misconceptions = Misconception.query.all()
+    return jsonify([m.to_dict() for m in misconceptions])

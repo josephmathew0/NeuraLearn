@@ -1,19 +1,25 @@
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from flask_migrate import Migrate  # ✅ Import Flask-Migrate
 from models import db  # ✅ Import the global `db` instance
+from api import api  # ✅ Ensure API is imported
+from flask_sql_validator_api import validate_sql  # ✅ Import the SQL validator
+
 
 app = Flask(__name__)
 app.config.from_object('config.Config')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///neuralearn.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # ✅ Initialize db with Flask app
 db.init_app(app)
+migrate = Migrate(app, db)  # ✅ Initialize Flask-Migrate
 
 # ✅ Enable CORS (allows React to access Flask API)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 # ✅ Import API AFTER initializing Flask & db to avoid circular imports
-from api import api
 app.register_blueprint(api)
 
 # ✅ Ensure tables are created inside app context
