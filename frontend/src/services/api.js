@@ -46,3 +46,15 @@ export const fetchUserResponses = async (userId) => {
     return [];
   }
 };
+
+// ✅ New function to validate SQL queries via Flask API
+export const validateSQLQuery = async (query) => {
+  try {
+    const response = await api.post("/validate_sql", { query });
+    console.log("🔍 SQL Validation Response:", response.data); // ✅ Debug Log
+    return response.data;
+  } catch (error) {
+    console.error("🚨 Error validating SQL query:", error);
+    return { validation: ["Error processing query"] };
+  }
+};
