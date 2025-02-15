@@ -24,6 +24,17 @@ def check_similarity(user_answer, correct_answers):
     similarity_matrix = cosine_similarity([vectors[-1]], vectors[:-1])
     return max(similarity_matrix[0])  # Get highest similarity score
 
+def tokenize_sql(query):
+    """Converts SQL into a normalized set of tokens for better similarity matching."""
+    parsed = sqlparse.parse(query)
+    tokens = [
+        token.value.upper()
+        for stmt in parsed
+        for token in stmt.tokens
+        if token.value.strip() and not token.is_whitespace
+    ]
+    return tokens
+
 def find_misconception(user_answer, question_id):
     """Finds the most probable misconception using Locality-Sensitive Hashing (LSH)."""
     print(f"🔍 Debug: Checking misconceptions for Q{question_id} with answer '{user_answer}'")
@@ -33,30 +44,24 @@ def find_misconception(user_answer, question_id):
         print("⚠️ No misconceptions found for this question.")
         return None  # No misconception found
 
-    # ✅ Normalize misconceptions (convert to lowercase)
     lsh = MinHashLSH(threshold=0.7, num_perm=128)
     minhashes = {}
 
-    # ✅ Precompute MinHash signatures for misconceptions
     for m in misconceptions:
         mh = MinHash(num_perm=128)
-        normalized_pattern = m.pattern.lower().strip()  # ✅ Normalize text
-
-        for word in normalized_pattern.split():
-            mh.update(word.encode('utf8'))
-
+        tokens = tokenize_sql(m.pattern)  # ✅ Tokenize SQL
+        for token in tokens:
+            mh.update(token.encode('utf8'))
         minhashes[m.id] = mh
         lsh.insert(m.id, mh)
-        print(f"📌 Debug: Added misconception {m.id} with normalized pattern '{normalized_pattern}' to LSH.")
+        print(f"📌 Debug: Added misconception {m.id} with pattern '{m.pattern}' to LSH.")
 
-    # ✅ Normalize user answer
-    normalized_user = user_answer.lower().strip()  # ✅ Convert to lowercase
     user_mh = MinHash(num_perm=128)
+    user_tokens = tokenize_sql(user_answer)  # ✅ Normalize user input
 
-    for word in normalized_user.split():
-        user_mh.update(word.encode('utf8'))
+    for token in user_tokens:
+        user_mh.update(token.encode('utf8'))
 
-    # ✅ Find the closest misconception using LSH
     closest_match = lsh.query(user_mh)
     print(f"🔎 Debug: LSH found closest match: {closest_match}")
 
@@ -70,8 +75,9 @@ def find_misconception(user_answer, question_id):
     return None
 
 
+
 def select_feedback(misconception):
-    """Selects the best feedback dynamically based on misconception frequency."""
+    """Selects the best feedback dynamically based on misconception frequency and weight."""
     if not misconception:
         print("⚠️ Debug: No misconception found, returning default feedback.")
         return "❌ Incorrect! Try again."
@@ -83,8 +89,12 @@ def select_feedback(misconception):
         print("⚠️ No specific feedback found, returning generic message.")
         return "❌ Incorrect! Consider reviewing the concept."
 
-    # ✅ Use Bayesian weighting
-    weights = [(f.weight + 1) / (f.occurrences + 2) for f in feedbacks]
+    # ✅ Adjust selection based on both misconception and feedback weights
+    weights = [
+        ((misconception.weight + f.weight + 1) / (misconception.occurrences + f.occurrences + 2))
+        for f in feedbacks
+    ]
+
     selected_feedback = random.choices(feedbacks, weights=weights, k=1)[0]
 
     print(f"✅ Debug: Selected feedback '{selected_feedback.message}' for misconception {misconception.id}")
@@ -93,4 +103,3 @@ def select_feedback(misconception):
     selected_feedback.update_weight()
 
     return f"❌ Incorrect! {selected_feedback.message}"
-
