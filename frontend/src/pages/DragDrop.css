@@ -1,0 +1,171 @@
+/* DragDrop.css */
+
+.draggable-option {
+    background-color: white;
+    border: 2px solid #3b82f6;
+    border-radius: 9999px;
+    padding: 6px 12px;
+    margin: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1d4ed8;
+    cursor: grab;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background 0.2s ease;
+  }
+  
+  .draggable-option:hover {
+    background-color: #e0f2fe;
+  }
+  
+  .droppable-blank {
+    display: inline-block;
+    min-width: 60px;
+    padding: 4px 8px;
+    border-bottom: 2px dashed #94a3b8;
+    margin: 4px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-align: center;
+  }
+  
+  /* Add to DragDrop.css */
+
+.draggable-option {
+    background-color: white;
+    border: 2px solid #2563eb; /* Tailwind blue-600 */
+    border-radius: 9999px; /* Full rounded */
+    padding: 8px 16px;
+    margin: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #1e3a8a;
+    cursor: grab;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+  }
+  
+  .draggable-option:hover {
+    background-color: #dbeafe; /* Light blue background on hover */
+  }
+
+  .droppable-blank {
+    display: inline-block;
+    min-width: 60px;
+    padding: 6px 10px;
+    margin: 4px;
+    border-bottom: 2px dashed #94a3b8;
+    text-align: center;
+    font-weight: bold;
+    color: #1f2937; /* Tailwind gray-800 */
+  }
+  
+  .droppable {
+    display: inline-flex;
+    min-width: 90px;
+    min-height: 36px;
+    border: 2px dashed #999;
+    border-radius: 8px;
+    margin: 4px;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    background-color: #f9f9f9;
+    font-weight: bold;
+  }
+  
+  .draggable-button {
+    background-color: #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 4px;
+    font-weight: 500;
+    cursor: grab;
+    transition: background-color 0.2s ease;
+    width: max-content;
+  }
+  
+  .draggable-button:hover {
+    background-color: #cbd5e1;
+  }
+
+  .draggableContainer{
+    display: flex;
+    justify-content: center;
+  }
+  
+  .blank {
+    color: #bbb;
+    font-style: italic;
+  }
+  
+  .correct {
+    border: 2px solid green;
+    background-color: #e6ffed;
+  }
+  .incorrect {
+    border: 2px solid red;
+    background-color: #ffe6e6;
+  }
+  
+  .green {
+    border: 2px solid #38a169;
+    background-color: #e6fffa;
+  }
+  .red {
+    border: 2px solid #e53e3e;
+    background-color: #fff5f5;
+  }
+  
+  .correct-answer {
+    background-color: #d1fae5; /* light green */
+    border: 2px solid #10b981; /* green */
+    border-radius: 8px;
+  }
+  
+  .incorrect-answer {
+    background-color: #fee2e2; /* light red */
+    border: 2px solid #ef4444; /* red */
+    border-radius: 8px;
+  }
+
+  .draggable-button.correct {
+    border: 2px solid green;
+    background-color: #d4edda;
+  }
+  
+  .draggable-button.incorrect {
+    border: 2px solid red;
+    background-color: #f8d7da;
+  }
+
+  .draggable-button {
+    padding: 8px 12px;
+    border-radius: 8px;
+    background-color: #f3f4f6;
+    border: 2px dashed #ccc;
+    transition: background-color 0.3s ease;
+  }
+  
+  .draggable-button.correct {
+    border-color: green;
+    background-color: #d1fae5;
+  }
+  
+  .draggable-button.incorrect {
+    border-color: red;
+    background-color: #fecaca;
+  }
+  
+  .blank {
+    display: inline-block;
+    min-width: 80px;
+    height: 32px;
+    border-bottom: 2px solid #888;
+    margin: 0 4px;
+  }
+
+  button{
+    margin: 10px;
+  }
+  

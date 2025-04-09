@@ -1,69 +1,77 @@
+# -----------------------------
+# File: models.py
+# -----------------------------
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 
 db = SQLAlchemy()
 
+# ----------------------------
+# USER MODEL
+# ----------------------------
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
+    username = db.Column(db.String(64), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-class Question(db.Model):
+    responses = db.relationship('UserResponse', backref='user', lazy=True)
+
+
+# ----------------------------
+# MCQ QUESTION MODEL
+# ----------------------------
+class MCQQuestion(db.Model):
+    __tablename__ = 'mcq_question'  # 👈 Ensures proper table name
+
     id = db.Column(db.Integer, primary_key=True)
-    question_type = db.Column(db.String(50), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    correct_answer = db.Column(db.Text, nullable=False)
-    options = db.Column(db.Text, nullable=True)  # Comma-separated MCQ options
+    question = db.Column(db.Text, nullable=False)
+    correct_answer = db.Column(db.String(256), nullable=False)
+    distractor1 = db.Column(db.String(256), nullable=False)
+    distractor2 = db.Column(db.String(256), nullable=False)
+    distractor3 = db.Column(db.String(256), nullable=False)
+    explanation = db.Column(db.Text)
+    topic = db.Column(db.String(128), nullable=True)
 
-class Response(db.Model):
+    responses = db.relationship('UserResponse', backref='mcq', lazy=True)
+
+
+# ----------------------------
+# USER RESPONSE MODEL
+# ----------------------------
+class UserResponse(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False)
-    answer = db.Column(db.Text, nullable=False)
-    correctness = db.Column(db.Boolean, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    mcq_id = db.Column(db.Integer, db.ForeignKey('mcq_question.id'), nullable=False)
+    selected_answer = db.Column(db.String(256))
+    is_correct = db.Column(db.Boolean)
+    attempted_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    user = db.relationship("User", backref=db.backref("responses", lazy=True))
-    question = db.relationship("Question", backref=db.backref("responses", lazy=True))
 
-class Misconception(db.Model):
+# ----------------------------
+# DRAG & DROP QUESTION MODEL
+# ----------------------------
+class DragDropQuestion(db.Model):
+    __tablename__ = 'dragdrop_question'
+
     id = db.Column(db.Integer, primary_key=True)
-    question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False)
-    pattern = db.Column(db.String(255), nullable=False)  # Stores common error
-    feedback = db.Column(db.String(500), nullable=False)  # Explanation for misconception
-    weight = db.Column(db.Float, default=1.0)  # ✅ Probability weight for how common the mistake is
-    occurrences = db.Column(db.Integer, default=1)  # ✅ Track total times misconception was observed
+    question = db.Column(db.Text, nullable=False)  # sentence with blanks
+    full_answer = db.Column(db.Text, nullable=False)  # original sentence
+    drag_question = db.Column(db.Text, nullable=False)  # sentence with ___
+    correct_answer = db.Column(db.Text, nullable=False)  # list of words (joined)
+    draggables = db.Column(db.Text, nullable=False)  # comma-separated draggables
 
-    def to_dict(self):
-        """Convert Misconception object to JSON-serializable format."""
-        return {
-            "id": self.id,
-            "question_id": self.question_id,
-            "pattern": self.pattern,
-            "feedback": self.feedback,
-            "weight": self.weight,
-            "occurrences": self.occurrences
-        }
 
-    def update_weight(self, increase=True):
-        """Dynamically update misconception weight using Bayesian update."""
-        if increase:
-            self.weight = (self.weight * self.occurrences + 1) / (self.occurrences + 1)
-            self.occurrences += 1  # ✅ Track misconception frequency
-        else:
-            self.weight = max(1.0, self.weight - 0.5)  # Prevent weight from going too low
-        db.session.commit()
+# ----------------------------
+# DRAG & DROP QUESTION MODEL 100
+# ----------------------------
 
-class Feedback(db.Model):
+class DragDrop100Question(db.Model):
+    __tablename__ = 'dragdrop100_question'
+
     id = db.Column(db.Integer, primary_key=True)
-    misconception_id = db.Column(db.Integer, db.ForeignKey('misconception.id'), nullable=False)
-    message = db.Column(db.String(500), nullable=False)
-    weight = db.Column(db.Float, default=1.0)  # ✅ Adaptive feedback weight
-    occurrences = db.Column(db.Integer, default=1)  # ✅ Track how often this feedback is used
-
-    def update_weight(self):
-        """Bayesian update for feedback weights."""
-        self.weight = (self.weight * self.occurrences + 1) / (self.occurrences + 1)
-        self.occurrences += 1
-        db.session.commit()
+    question = db.Column(db.Text, nullable=False)
+    full_answer = db.Column(db.Text, nullable=False)
+    drag_question = db.Column(db.Text, nullable=False)
+    correct_answer = db.Column(db.Text, nullable=False)
+    draggables = db.Column(db.Text, nullable=False)  # Stored as comma-separated
