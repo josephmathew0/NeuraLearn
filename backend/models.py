@@ -75,3 +75,17 @@ class DragDrop100Question(db.Model):
     drag_question = db.Column(db.Text, nullable=False)
     correct_answer = db.Column(db.Text, nullable=False)
     draggables = db.Column(db.Text, nullable=False)  # Stored as comma-separated
+
+
+# ----------------------------
+# SHORT ANSWER MODEL 
+# ----------------------------
+
+class TextAnswerQuestion(db.Model):
+    __tablename__ = 'text_answer_question'
+
+    id = db.Column(db.Integer, primary_key=True)
+    question = db.Column(db.Text, nullable=False)
+    answer = db.Column(db.Text, nullable=False)
+
+
