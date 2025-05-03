@@ -13,9 +13,8 @@ node_modules/
 .DS_Store
 
 # Ignore environment secrets
-.env
+# .env
 .env.production
 
-# ✅ Allow models folder to be tracked (especially all-MiniLM-L6-v2)
-# Remove this if you want to ignore models again:
+# Allow models folder to be tracked (especially all-MiniLM-L6-v2)
 # models/
