@@ -2,10 +2,12 @@ Flask==2.3.2
 flask-cors==3.0.10
 Flask-SQLAlchemy==3.1.1
 flask-socketio==5.3.6
-eventlet==0.33.3            # Required for WebSocket support with flask-socketio
+eventlet==0.33.3            # Required for WebSocket support
 gunicorn==21.2.0
 sentence-transformers>=4.1.0
 torch==2.2.2
 nltk==3.8.1
 numpy==1.24.4
 huggingface_hub==0.14.1
+scipy>=1.10.0               # Required by sentence-transformers for similarity calc
+transformers>=4.28.0        # Required for some models & tokenizer compatibility
