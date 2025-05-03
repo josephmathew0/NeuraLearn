@@ -241,7 +241,9 @@ if __name__ == '__main__':
     socketio.init_app(app, cors_allowed_origins=[
         "http://localhost:5173",
         "http://10.0.0.165:5173",
-        "https://neuralearn-one.vercel.app"
+        "https://neuralearn-one.vercel.app",
+        "https://neuralearn-l1igduebm-josephs-projects-84a0d8a1.vercel.app"  # ✅ Add this
     ])
+
     print("✅ NeuraLearn server starting on port 5000...")
     socketio.run(app, host='0.0.0.0', port=5000)
