@@ -4,7 +4,7 @@ Flask-SQLAlchemy==3.1.1
 flask-socketio==5.3.6
 eventlet==0.33.3            # Required for WebSocket support with flask-socketio
 gunicorn==21.2.0
-sentence-transformers==2.2.2
+sentence-transformers>=4.1.0
 torch==2.2.2
 nltk==3.8.1
 numpy==1.24.4
