@@ -6,16 +6,16 @@ __pycache__/
 node_modules/
 
 # Ignore database files
-*.sqlite3
 **/.env*
-
 
 # Ignore logs and system files
 *.log
 .DS_Store
 
-# Ignore IP info
+# Ignore environment secrets
 .env
 .env.production
 
-models/
+# ✅ Allow models folder to be tracked (especially all-MiniLM-L6-v2)
+# Remove this if you want to ignore models again:
+# models/
