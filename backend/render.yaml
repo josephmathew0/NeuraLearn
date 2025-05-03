@@ -1,9 +1,13 @@
 services:
   - type: web
-    name: neuralearn-backend
+    name: NeuraLearn
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app
+    region: oregon
+    plan: standard
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: python backend/app.py
+    workingDir: backend
+    autoDeploy: true
     envVars:
-      - key: PORT
-        value: 10000
+      - key: FLASK_ENV
+        value: production
