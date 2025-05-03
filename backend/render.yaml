@@ -1,13 +1,9 @@
 services:
   - type: web
-    name: NeuraLearn
+    name: neuralearn
     env: python
-    region: oregon
     plan: standard
-    buildCommand: pip install -r backend/requirements.txt
+    buildCommand: pip install -r requirements.txt
     startCommand: python backend/app.py
-    workingDir: backend
     autoDeploy: true
-    envVars:
-      - key: FLASK_ENV
-        value: production
+    rootDir: backend
