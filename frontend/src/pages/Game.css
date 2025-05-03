@@ -1,0 +1,72 @@
+/* File: frontend/src/pages/Game.css */
+
+:root {
+    --vh: 1vh;
+  }
+  
+  .game-container {
+    width: 100vw;
+    height: calc(var(--vh, 1vh) * 100);
+    background-image: url("/mystery_map.png");
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .player {
+    position: absolute;
+    text-align: center;
+    transform: translate(-50%, -50%);
+  }
+  
+  .player-image {
+    width: 65px;
+    height: 65px;
+    object-fit: contain;
+  }
+  
+  .player-name {
+    font-size: 1rem;
+    color: white;
+    font-weight: bold;
+    text-shadow: 1px 1px 3px black;
+    margin-top: -5px;
+  }
+  
+  .location-banner {
+    position: absolute;
+    bottom: 10vh;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    z-index: 1000;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(255,255,255,0.2);
+  }
+    
+
+  /* Mobile scaling */
+  @media (max-width: 768px) {
+    .player-image {
+      width: 60px;
+      height: 60px;
+    }
+  
+    .player-name {
+      font-size: 0.8rem;
+    }
+  
+    .joystick-container {
+      position: absolute;
+      bottom: 15px;
+      left: 15px;
+      z-index: 10;
+    }
+  }
+  

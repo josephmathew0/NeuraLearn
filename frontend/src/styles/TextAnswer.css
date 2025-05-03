@@ -1,0 +1,28 @@
+.text-answer-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+  font-family: sans-serif;
+}
+
+textarea {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.feedback {
+  margin-top: 1rem;
+  font-weight: bold;
+}
+
+.correct-answer {
+  color: green;
+  font-family: monospace;
+}
+
+.incorrect {
+  color: red;
+}
