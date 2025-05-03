@@ -1,10 +1,9 @@
 # -----------------------------
-# File: backend/app.py (Optimized)
+# File: backend/app.py (Optimized & Fixed)
 # -----------------------------
-# Adding comment to test
-import eventlet
-eventlet.monkey_patch(thread=False)  # Prevents monkey-patching threading, which can cause lock issues
 
+import eventlet
+eventlet.monkey_patch()  # ✅ Required for flask-socketio to work properly
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -17,15 +16,18 @@ import re
 from nltk.tokenize import sent_tokenize
 import nltk
 from nltk.data import find
-from models import db, MCQQuestion, DragDropQuestion, DragDrop100Question, TextAnswerQuestion, SQLMCQStructured, SQLDragDrop, SQLTextAnswerQuestion, DTDQuestion
+from models import (
+    db, MCQQuestion, DragDropQuestion, DragDrop100Question,
+    TextAnswerQuestion, SQLMCQStructured, SQLDragDrop,
+    SQLTextAnswerQuestion, DTDQuestion
+)
 from sqlalchemy import func
+from sqlalchemy.pool import NullPool
 from socket_server import socketio, register_socket_events, get_lobby_players
-from difflib import SequenceMatcher
 
 # ----------------------------
 # App Initialization
 # ----------------------------
-
 app = Flask(__name__)
 CORS(app)
 
@@ -34,12 +36,10 @@ CORS(app)
 # ----------------------------
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 nltk.data.path.append(os.path.join(BASE_DIR, 'nltk_data'))
+
 DB_PATH = os.path.join(BASE_DIR, 'instance', 'neuralearn.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DB_PATH + '?check_same_thread=False'
-from sqlalchemy.pool import NullPool
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'poolclass': NullPool
-}
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'poolclass': NullPool}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
@@ -48,16 +48,16 @@ db.init_app(app)
 # ----------------------------
 model = SentenceTransformer(os.path.join(BASE_DIR, 'models', 'all-MiniLM-L6-v2'))
 
-# Ensure NLTK tokenizer is available from local folder (for Render)
+# Ensure NLTK tokenizer is available
 try:
     find('tokenizers/punkt')
 except LookupError:
-    print("⚠️ NLTK punkt tokenizer not found in bundled directory.")
-
+    print("⚠️ NLTK punkt tokenizer not found.")
 
 # ----------------------------
 # Routes
 # ----------------------------
+
 @app.route('/')
 def index():
     return jsonify({'message': '🚀 NeuraLearn Backend is running!'})
@@ -119,30 +119,22 @@ def evaluate_text():
 
         highlighted = []
         for sent in correct_sents:
-            sent_embedding = model.encode(sent)
-            sim = util.cos_sim(sent_embedding, student_embedding).item()
-            if sim < 0.75:
-                highlighted.append(f"<strong>{sent}</strong>")
-            else:
-                highlighted.append(sent)
-        final_feedback = " ".join(highlighted)
+            sim = util.cos_sim(model.encode(sent), student_embedding).item()
+            highlighted.append(f"<strong>{sent}</strong>" if sim < 0.75 else sent)
 
-        if score > 0.95:
-            level = "🌟 Excellent"
-        elif score > 0.85:
-            level = "👍 Good"
-        elif score > 0.65:
-            level = "⚠️ Needs Improvement"
-        else:
-            level = "❌ Try again"
+        level = (
+            "🌟 Excellent" if score > 0.95 else
+            "👍 Good" if score > 0.85 else
+            "⚠️ Needs Improvement" if score > 0.65 else
+            "❌ Try again"
+        )
 
         return jsonify({
             "score": round(score, 2),
             "level": level,
-            "highlighted_answer": final_feedback
+            "highlighted_answer": " ".join(highlighted)
         })
-
-    except Exception as e:
+    except Exception:
         return jsonify({"error": "Internal Server Error"}), 500
 
 @app.route("/api/dtd/<int:qid>")
@@ -222,7 +214,10 @@ def evaluate_sql_text():
     else:
         feedback = "Your answer misses key concepts. Review the topic and try again."
 
-    highlighted = " ".join([f"<span style='color:red; font-weight:bold'>{word}</span>" if word not in user_tokens else word for word in correct_answer.split()])
+    highlighted = " ".join([
+        f"<span style='color:red; font-weight:bold'>{word}</span>" if word not in user_tokens else word
+        for word in correct_answer.split()
+    ])
 
     return jsonify({
         "model_score": model_score,
@@ -237,6 +232,9 @@ def get_lobby():
     players = get_lobby_players()
     return jsonify({ "players": players })
 
+# ----------------------------
+# Server Entry Point
+# ----------------------------
 if __name__ == '__main__':
     os.makedirs(os.path.join(BASE_DIR, 'instance'), exist_ok=True)
     register_socket_events(app)
@@ -245,5 +243,5 @@ if __name__ == '__main__':
         "http://10.0.0.165:5173",
         "https://neuralearn-one.vercel.app"
     ])
+    print("✅ NeuraLearn server starting on port 5000...")
     socketio.run(app, host='0.0.0.0', port=5000)
-
