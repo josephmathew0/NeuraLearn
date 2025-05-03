@@ -3,7 +3,8 @@
 # -----------------------------
 # Adding comment to test
 import eventlet
-eventlet.monkey_patch()
+eventlet.monkey_patch(thread=False)  # Prevents monkey-patching threading, which can cause lock issues
+
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -35,9 +36,10 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 nltk.data.path.append(os.path.join(BASE_DIR, 'nltk_data'))
 DB_PATH = os.path.join(BASE_DIR, 'instance', 'neuralearn.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DB_PATH + '?check_same_thread=False'
+from sqlalchemy.pool import NullPool
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'poolclass': None  # Disable pooling to avoid threading issues
-    }
+    'poolclass': NullPool
+}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
