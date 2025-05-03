@@ -242,7 +242,9 @@ if __name__ == '__main__':
         "http://localhost:5173",
         "http://10.0.0.165:5173",
         "https://neuralearn-one.vercel.app",
-        "https://neuralearn-l1igduebm-josephs-projects-84a0d8a1.vercel.app"  # ✅ Add this
+        "https://neuralearn-l1igduebm-josephs-projects-84a0d8a1.vercel.app",
+        "https://neuralearn.online",
+        "https://www.neuralearn.online",
     ])
 
     print("✅ NeuraLearn server starting on port 5000...")
