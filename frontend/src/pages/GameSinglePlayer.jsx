@@ -17,6 +17,7 @@ const GameSinglePlayer = () => {
 
   const detectionRadius = 60;
   const scaleFactor = window.innerWidth < 768 ? 1.5 : 1;
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const playerInfo = JSON.parse(localStorage.getItem("playerInfo")) || {};
   const character = playerInfo.character;
@@ -100,7 +101,7 @@ const GameSinglePlayer = () => {
 
     const path = role === "murderer" ? "murderer" : "player";
     try {
-      const res = await fetch(`/api/gamequestion/${path}/${locMap.q}`);
+      const res = await fetch(`${API_URL}/api/gamequestion/${path}/${locMap.q}`);
       const data = await res.json();
       setQuestionData({ ...data, location: reachedLocation });
       setShowQuestion(true);
@@ -114,7 +115,7 @@ const GameSinglePlayer = () => {
     const trimmedCorrect = questionData.answer_query.trim();
 
     try {
-      const res = await fetch(`/api/sql/evaluate_text`, {
+      const res = await fetch(`${API_URL}/api/sql/evaluate_text`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_answer: trimmedUser, correct_answer: trimmedCorrect }),
@@ -128,7 +129,7 @@ const GameSinglePlayer = () => {
         setFeedback("✅ Excellent! You've nailed it.");
         setHint(`💡 Hint: ${questionData.hint}`);
 
-        if (questionData.order === 10) {
+        if (parseInt(questionData.order) === 10) {
           setTimeout(() => {
             setGameOver(true);
             setShowQuestion(false);
