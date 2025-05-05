@@ -17,4 +17,4 @@ node_modules/
 # .env.production
 
 # Allow models folder to be tracked (especially all-MiniLM-L6-v2)
-# models/
+models/

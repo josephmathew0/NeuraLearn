@@ -1,51 +1,118 @@
 /* File: frontend/src/components/QuestionPopup.css */
 
-.question-popup-overlay {
+.popup-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 1000;
+  align-items: center;
+  z-index: 10000;
 }
 
-.question-popup {
+.popup-box {
   background: white;
-  padding: 2rem;
+  padding: 25px;
   border-radius: 12px;
+  max-width: 500px;
   width: 90%;
-  max-width: 600px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
 }
 
-.question-popup h2 {
-  margin-top: 0;
-}
-
-.question-input {
+textarea {
   width: 100%;
-  margin-top: 1rem;
-  padding: 0.75rem;
+  height: 80px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  padding: 10px;
   font-size: 1rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
 }
 
-.question-actions {
-  margin-top: 1rem;
-  text-align: right;
-}
-
-.question-actions button {
-  padding: 0.6rem 1.2rem;
-  font-weight: bold;
-  background-color: #4caf50;
-  color: white;
-  border: none;
+button {
+  margin-right: 10px;
+  padding: 8px 16px;
+  font-size: 1rem;
   border-radius: 8px;
+  border: none;
   cursor: pointer;
+}
+
+.feedback {
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.hint {
+  margin-top: 5px;
+  font-style: italic;
+  color: #444;
+}
+
+.close-btn {
+  background: #ccc;
+}
+
+.feedback {
+  font-weight: bold;
+  margin-top: 10px;
+  color: green;
+}
+
+.hint {
+  font-style: italic;
+  margin-top: 5px;
+  color: #ffaa00;
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.feedback {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.hint {
+  color: #007bff;
+  font-style: italic;
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.highlighted {
+  margin-top: 10px;
+  background-color: #f4f4f4;
+  padding: 10px;
+  border-radius: 6px;
+  font-family: monospace;
+}
+
+.example-block pre {
+  background-color: #f8f9fa;
+  padding: 5px;
+  border-radius: 4px;
+  font-family: monospace;
+  white-space: pre-wrap;
+}
+
+.feedback.error {
+  color: red;
+  font-weight: bold;
+}
+
+.highlighted-box {
+  background-color: #f9f9f9;
+  padding: 8px;
+  margin-top: 10px;
+  border-left: 4px solid #ccc;
 }

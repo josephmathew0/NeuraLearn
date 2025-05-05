@@ -1,72 +1,226 @@
 /* File: frontend/src/pages/Game.css */
 
-:root {
-    --vh: 1vh;
-  }
-  
-  .game-container {
-    width: 100vw;
-    height: calc(var(--vh, 1vh) * 100);
-    background-image: url("/mystery_map.png");
-    background-size: cover;
-    background-position: center;
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .player {
-    position: absolute;
-    text-align: center;
-    transform: translate(-50%, -50%);
-  }
-  
-  .player-image {
-    width: 65px;
-    height: 65px;
-    object-fit: contain;
-  }
-  
-  .player-name {
-    font-size: 1rem;
-    color: white;
-    font-weight: bold;
-    text-shadow: 1px 1px 3px black;
-    margin-top: -5px;
-  }
-  
-  .location-banner {
-    position: absolute;
-    bottom: 10vh;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.75);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 12px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    z-index: 1000;
-    text-align: center;
-    box-shadow: 0 0 10px rgba(255,255,255,0.2);
-  }
-    
+/* :root {
+  --vh: 1vh;
+} */
 
-  /* Mobile scaling */
-  @media (max-width: 768px) {
-    .player-image {
-      width: 60px;
-      height: 60px;
-    }
-  
-    .player-name {
-      font-size: 0.8rem;
-    }
-  
-    .joystick-container {
-      position: absolute;
-      bottom: 15px;
-      left: 15px;
-      z-index: 10;
-    }
+.game-container {
+  width: 100vw;
+  /* height: calc(var(--vh, 1vh) * 100); */
+  height: 100vh;
+  background-image: url("/mystery_map.png");
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Player avatar styling */
+.player {
+  position: absolute;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.player-image {
+  width: 65px;
+  height: 65px;
+  object-fit: contain;
+}
+
+.player-name {
+  font-size: 1rem;
+  color: white;
+  font-weight: bold;
+  text-shadow: 1px 1px 3px black;
+  margin-top: -5px;
+}
+
+.player-role {
+  font-size: 0.75rem;
+  color: lightgray;
+  text-shadow: 1px 1px 2px black;
+}
+
+/* Murderer banner only for self */
+.murderer-banner {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 0, 0, 0.85);
+  color: white;
+  padding: 10px 20px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border-radius: 10px;
+  z-index: 1000;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+}
+
+/* See Question Button */
+.see-question-button {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+}
+
+.see-question-button button {
+  font-size: 16px;
+  padding: 8px 20px;
+  border: none;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Location banner (optional) */
+.location-banner {
+  position: absolute;
+  bottom: 10vh;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  z-index: 1000;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* Question popup */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.popup-box {
+  background: white;
+  padding: 30px 25px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.popup-box h2 {
+  margin-bottom: 10px;
+  color: #113f67;
+}
+
+.popup-box textarea {
+  width: 100%;
+  height: 100px;
+  margin-top: 12px;
+  margin-bottom: 15px;
+  padding: 10px;
+  font-family: monospace;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  resize: vertical;
+}
+
+.popup-box button {
+  padding: 10px 16px;
+  margin-top: 8px;
+  margin-right: 8px;
+  border: none;
+  background-color: #113f67;
+  color: white;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.popup-box .close-btn {
+  background-color: #888;
+  margin-top: 10px;
+}
+
+.feedback {
+  margin-top: 10px;
+  font-weight: bold;
+  font-size: 1rem;
+  color: green;
+}
+
+.feedback.error {
+  color: red;
+}
+
+.hint {
+  font-style: italic;
+  color: #555;
+  margin-top: 5px;
+}
+
+.highlighted-box {
+  background-color: #f3f3f3;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 15px;
+  border-left: 4px solid green;
+  text-align: left;
+}
+
+.highlighted-box p {
+  margin: 0;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+/* Joystick on mobile */
+.joystick-container {
+  position: absolute;
+  bottom: 15px;
+  left: 15px;
+  z-index: 10;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .player-image {
+    width: 60px;
+    height: 60px;
   }
-  
+
+  .player-name {
+    font-size: 0.8rem;
+  }
+
+  .popup-box {
+    width: 95%;
+    padding: 20px 15px;
+  }
+
+  .popup-box textarea {
+    height: 80px;
+  }
+
+  .see-question-button button {
+    font-size: 14px;
+    padding: 6px 16px;
+  }
+}

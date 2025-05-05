@@ -12,6 +12,11 @@ import DragDropDBMS from "./pages/DragDropDBMS";
 import DTDChecker from "./pages/DTDChecker";
 import MysteryGame from "./pages/MysteryGame"; 
 import Game from "./pages/Game";
+// import CharacterSelectSingle from "./pages/mystery/CharacterSelectSingle";  // <-- Import it
+import CharacterSelectSingle from "./pages/CharacterSelectSingle";
+import GameSinglePlayer from "./pages/GameSinglePlayer";
+
+
 
 function App() {
   return (
@@ -35,6 +40,8 @@ function App() {
         <Route path="/playground/dbms/dtd" element={<DTDChecker />} />
         <Route path="/playground/dbms/mystery/*" element={<MysteryGame />} />
         <Route path="/playground/dbms/mystery/game" element={<Game />} />
+        <Route path="/playground/dbms/mystery/singleplayer" element={<CharacterSelectSingle />} />
+        <Route path="/playground/dbms/mystery/single" element={<GameSinglePlayer />} />
       </Routes>
     </Router>
   );

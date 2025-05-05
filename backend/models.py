@@ -145,3 +145,29 @@ class SQLTextAnswerQuestion(db.Model):
 
 
 
+# ----------------------------
+# MURDER MYSTERY GAME
+# ----------------------------
+class GameQuestion(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    question = db.Column(db.Text, nullable=False)
+    answer_query = db.Column(db.Text, nullable=False)
+    hint = db.Column(db.String, nullable=False)
+    role = db.Column(db.String, nullable=False)  # 'player' or 'murderer'
+    question_order = db.Column(db.Integer, nullable=False)  # instead of 'number'
+
+
+
+# ----------------------------
+# PLAYER TABLE (for Mystery Game)
+# ----------------------------
+class Player(db.Model):
+    __tablename__ = 'players'
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    character = db.Column(db.String(120), nullable=False)
+    role = db.Column(db.String(20), nullable=False)
+
+    def __repr__(self):
+        return f"<Player {self.username} - {self.character} ({self.role})>"

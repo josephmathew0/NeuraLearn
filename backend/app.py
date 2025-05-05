@@ -1,9 +1,9 @@
 # -----------------------------
-# File: backend/app.py (Optimized & Fixed)
+# File: backend/app.py (Final Fixed Version)
 # -----------------------------
 
 import eventlet
-eventlet.monkey_patch()  # ✅ Required for flask-socketio to work properly
+eventlet.monkey_patch()
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -19,11 +19,12 @@ from nltk.data import find
 from models import (
     db, MCQQuestion, DragDropQuestion, DragDrop100Question,
     TextAnswerQuestion, SQLMCQStructured, SQLDragDrop,
-    SQLTextAnswerQuestion, DTDQuestion
+    SQLTextAnswerQuestion, DTDQuestion, GameQuestion, Player
 )
 from sqlalchemy import func
 from sqlalchemy.pool import NullPool
-from socket_server import socketio, register_socket_events, get_lobby_players
+from socket_handler import socketio  # ✅ Only import socketio
+from socket_handler import get_all_players
 
 # ----------------------------
 # App Initialization
@@ -48,14 +49,13 @@ db.init_app(app)
 # ----------------------------
 model = SentenceTransformer(os.path.join(BASE_DIR, 'models', 'all-MiniLM-L6-v2'))
 
-# Ensure NLTK tokenizer is available
 try:
     find('tokenizers/punkt')
 except LookupError:
     print("⚠️ NLTK punkt tokenizer not found.")
 
 # ----------------------------
-# Routes
+# Routes (Unchanged)
 # ----------------------------
 
 @app.route('/')
@@ -229,15 +229,70 @@ def evaluate_sql_text():
 
 @app.route("/api/lobby")
 def get_lobby():
-    players = get_lobby_players()
+    players = get_all_players()
     return jsonify({ "players": players })
+
+@app.route("/api/gamequestion/<role>/<int:number>")
+def get_game_question(role, number):
+    question = GameQuestion.query.filter_by(role=role, question_order=number).first()
+    if not question:
+        return jsonify({"error": "Question not found"}), 404
+    return jsonify({
+        "id": question.id,
+        "role": question.role,
+        "question_order": question.question_order,
+        "question": question.question,
+        "answer_query": question.answer_query,
+        "hint": question.hint
+    })
+
+@app.route("/api/debug/gamequestions")
+def debug_all_game_questions():
+    questions = GameQuestion.query.order_by(GameQuestion.role, GameQuestion.question_order).all()
+    return jsonify([
+        {
+            "id": question.id,
+            "role": question.role,
+            "question_order": question.question_order,
+            "question": question.question,
+            "answer_query": question.answer_query,
+            "hint": question.hint
+        } for question in questions
+    ])
+
+@app.route("/api/player/save", methods=["POST"])
+def save_player():
+    data = request.json
+    username = data.get("username")
+    character = data.get("character")
+
+    if not username or not character:
+        return jsonify({"error": "Missing username or character"}), 400
+
+    role = "murderer" if character in ["char4.png", "char5.png"] else "player"
+
+    existing = Player.query.filter_by(username=username).first()
+    if existing:
+        existing.character = character
+        existing.role = role
+    else:
+        new_player = Player(username=username, character=character, role=role)
+        db.session.add(new_player)
+
+    db.session.commit()
+    return jsonify({
+        "message": "Player saved",
+        "username": username,
+        "character": character,
+        "role": role
+    })
 
 # ----------------------------
 # Server Entry Point
 # ----------------------------
 if __name__ == '__main__':
     os.makedirs(os.path.join(BASE_DIR, 'instance'), exist_ok=True)
-    register_socket_events(app)
+
     socketio.init_app(app, cors_allowed_origins=[
         "http://localhost:5173",
         "http://10.0.0.165:5173",

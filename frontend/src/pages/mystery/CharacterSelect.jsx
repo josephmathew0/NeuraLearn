@@ -1,3 +1,5 @@
+// File: frontend/src/pages/CharacterSelect.jsx
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { socket } from "../../socket";
@@ -10,21 +12,59 @@ const CharacterSelect = () => {
 
   const characters = Array.from({ length: 10 }, (_, i) => i);
 
-  const handleCharacterClick = (charIndex) => {
+  const handleCharacterClick = async (charIndex) => {
     const name = prompt("Enter your username:");
     if (name && name.trim() !== "") {
       const trimmedName = name.trim();
       const characterImg = `char${charIndex}.png`;
+      const assignedRole = (charIndex === 4 || charIndex === 5) ? "murderer" : "player";
+
+      const playerData = {
+        username: trimmedName,
+        character: characterImg,
+        role: assignedRole,
+        sid: socket.id,
+      };
+
+      // Save to localStorage
+      localStorage.setItem("playerInfo", JSON.stringify(playerData));
+
+      console.log("🎮 Emitting player_join with:");
+      console.log("   ➞ SID:", playerData.sid);
+      console.log("   ➞ Username:", playerData.username);
+      console.log("   ➞ Character:", playerData.character);
+      console.log("   ➞ Role:", playerData.role);
+
+      socket.emit("player_join", {
+        sid: playerData.sid,
+        username: playerData.username,
+        character: playerData.character,
+        role: playerData.role,
+      });
+
+      // ✅ Save to backend DB
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/player/save`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: trimmedName,
+            character: characterImg,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          console.warn("⚠️ Failed to save player:", data.error);
+        } else {
+          console.log("✅ Player saved to DB:", data);
+        }
+      } catch (err) {
+        console.error("❌ Error saving player to DB:", err);
+      }
 
       setSelectedCharacter(charIndex);
       setUsername(trimmedName);
-
-      // ✅ Emit immediately after both name and image are known
-      socket.emit("player_join", {
-        username: trimmedName,
-        character: characterImg,
-      });
-      localStorage.setItem("playerData", JSON.stringify({ trimmedName, characterImg }));
     } else {
       alert("Username is required!");
     }

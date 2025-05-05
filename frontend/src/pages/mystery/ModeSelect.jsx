@@ -5,8 +5,7 @@ function ModeSelect() {
   const navigate = useNavigate();
 
   const handleSinglePlayer = () => {
-    // (You can later design single player mode separately)
-    alert("Single Player mode is under construction!");
+    navigate("/playground/dbms/mystery/singleplayer");  // <-- updated path
   };
 
   const handleMultiPlayer = () => {

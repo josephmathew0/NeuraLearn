@@ -10,18 +10,26 @@ const Lobby = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // 🔁 Fetch current lobby players from backend
     fetch(`${import.meta.env.VITE_API_URL}/api/lobby`)
       .then((res) => res.json())
       .then((data) => {
         if (data.players) {
+          console.log("📦 Initial Lobby:");
+          data.players.forEach((p, i) =>
+            console.log(`   ${i + 1}. ${p.username} (${p.character}) → ${p.role}`)
+          );
           setPlayers(data.players);
-          console.log("Players loaded:", data.players);
         }
       })
-      .catch((err) => console.error("Failed to fetch players:", err));
+      .catch((err) => console.error("❌ Failed to fetch players:", err));
 
+    // 🔔 Listen for lobby updates
     socket.on("lobby_update", (data) => {
-      console.log("Lobby updated:", data.players);
+      console.log("🔄 [Socket] Lobby update received:");
+      data.players.forEach((p, i) =>
+        console.log(`   ${i + 1}. ${p.username} (${p.character}) → ${p.role}`)
+      );
       setPlayers(data.players);
     });
 
@@ -30,17 +38,35 @@ const Lobby = () => {
     };
   }, []);
 
+  useEffect(() => {
+    socket.on("connect", () => {
+      const playerInfo = JSON.parse(localStorage.getItem("playerInfo"));
+      if (playerInfo) {
+        socket.emit("player_join", {
+          sid: socket.id,
+          username: playerInfo.username,
+          character: playerInfo.character,
+          role: playerInfo.role,
+        });
+        console.log(`📤 Sent player_join → ${playerInfo.username} (${playerInfo.character}) → Role: ${playerInfo.role}`);
+      }
+    });
+
+    return () => {
+      socket.off("connect");
+    };
+  }, []);
+
   const requestFullscreen = () => {
     const el = document.documentElement;
-
     if (el.requestFullscreen) el.requestFullscreen();
     else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
     else if (el.msRequestFullscreen) el.msRequestFullscreen();
-    else console.warn("Fullscreen not supported");
   };
 
   const handleStartGame = () => {
     requestFullscreen();
+    socket.emit("start_game");
     navigate("/playground/dbms/mystery/game");
   };
 
@@ -58,6 +84,7 @@ const Lobby = () => {
               className="player-avatar"
             />
             <div className="player-name">{player.username}</div>
+            {/* Role removed as per instruction */}
           </div>
         ))}
       </div>
