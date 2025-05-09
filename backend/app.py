@@ -452,5 +452,6 @@ if __name__ == '__main__':
         "https://www.neuralearn.online",
     ])
 
-    print("✅ NeuraLearn server starting on port 5000...")
-    socketio.run(app, host='0.0.0.0', port=5000)
+    port = int(os.environ.get("PORT", 5000))  # 👈 dynamic port binding
+    print(f"✅ NeuraLearn server starting on port {port}...")
+    socketio.run(app, host='0.0.0.0', port=port)
