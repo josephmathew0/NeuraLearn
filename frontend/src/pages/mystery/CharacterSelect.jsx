@@ -26,14 +26,7 @@ const CharacterSelect = () => {
         sid: socket.id,
       };
 
-      // Save to localStorage
       localStorage.setItem("playerInfo", JSON.stringify(playerData));
-
-      console.log("🎮 Emitting player_join with:");
-      console.log("   ➞ SID:", playerData.sid);
-      console.log("   ➞ Username:", playerData.username);
-      console.log("   ➞ Character:", playerData.character);
-      console.log("   ➞ Role:", playerData.role);
 
       socket.emit("player_join", {
         sid: playerData.sid,
@@ -42,7 +35,6 @@ const CharacterSelect = () => {
         role: playerData.role,
       });
 
-      // ✅ Save to backend DB
       try {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/player/save`, {
           method: "POST",

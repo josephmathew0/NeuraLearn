@@ -21,8 +21,17 @@ const Game = () => {
   const [highlightedAnswer, setHighlightedAnswer] = useState("");
   const [gameOverData, setGameOverData] = useState(null);
 
-  const detectionRadius = 60;
-  const scaleFactor = window.innerWidth < 768 ? 1.5 : 1;
+  const screenHeight = window.innerHeight;
+  const isMobile = window.innerWidth < 768;
+  const scaleFactor = isMobile ? screenHeight / 700 : 1;
+  const detectionRadius = 60 * scaleFactor;
+  const playerSize = isMobile ? 40 : 60;
+
+  const scaledLocations = locations.map(loc => ({
+    ...loc,
+    x: loc.x * scaleFactor,
+    y: loc.y * scaleFactor,
+  }));
 
   useEffect(() => {
     const resizeGame = () => {
@@ -62,10 +71,10 @@ const Game = () => {
   useEffect(() => {
     const moveInterval = setInterval(() => {
       if (movementDirection) {
-        const step = 1;
+        const step = 1.5 * scaleFactor;
         let newX = myPosition.x;
         let newY = myPosition.y;
-        const halfSize = window.innerWidth < 768 ? 30 : 50;
+        const halfSize = playerSize / 2;
 
         if (movementDirection === "FORWARD") newY -= step;
         if (movementDirection === "BACKWARD") newY += step;
@@ -109,20 +118,12 @@ const Game = () => {
   const handleJoystickStop = () => setMovementDirection(null);
 
   const checkLocationProximity = (pos) => {
-    const scaledX = pos.x / scaleFactor;
-    const scaledY = pos.y / scaleFactor;
-
-    for (let loc of locations) {
-      const dx = scaledX - loc.x;
-      const dy = scaledY - loc.y;
+    for (let loc of scaledLocations) {
+      const dx = pos.x - loc.x;
+      const dy = pos.y - loc.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       if (distance < detectionRadius) {
         setReachedLocation(loc.name);
-        const me = players.find((p) => p.sid === mySID);
-        if (me) {
-          console.log(`📍 ${me.username} (${me.character}, ${me.role}) has reached ${loc.name}`);
-          console.log("🧩 Stored Info:", me);
-        }
         return;
       }
     }
@@ -134,20 +135,19 @@ const Game = () => {
     if (!locMap) return;
 
     const playerInfo = JSON.parse(localStorage.getItem("playerInfo"));
-    if (!playerInfo || !playerInfo.character || !playerInfo.username) {
-      console.warn("⚠️ Missing player info. Aborting fetch.");
-      return;
-    }
-
-    console.log("✨ Stored player info:", playerInfo);
     const path = ["char4.png", "char5.png"].includes(playerInfo.character) ? "murderer" : "player";
-    console.log("📦 Fetching from path:", `/api/gamequestion/${path}/${locMap.q}`);
 
     try {
       const url = `${import.meta.env.VITE_API_URL}/api/gamequestion/${path}/${locMap.q}`;
       const res = await fetch(url);
       const data = await res.json();
-      setQuestionData({ location: reachedLocation, question: data.question, answer_query: data.answer_query, hint: data.hint, order: data.question_order });
+      setQuestionData({
+        location: reachedLocation,
+        question: data.question,
+        answer_query: data.answer_query,
+        hint: data.hint,
+        order: data.question_order,
+      });
       setShowQuestion(true);
     } catch (err) {
       console.error("❌ Error fetching question:", err);
@@ -165,34 +165,27 @@ const Game = () => {
       return;
     }
 
-    const trimmedUserAnswer = userAnswer.trim();
-    const trimmedCorrectAnswer = questionData.answer_query.trim();
-
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/sql/evaluate_text`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_answer: trimmedUserAnswer, correct_answer: trimmedCorrectAnswer }),
+        body: JSON.stringify({
+          user_answer: userAnswer.trim(),
+          correct_answer: questionData.answer_query.trim(),
+        }),
       });
-
       const data = await res.json();
-      if (res.status !== 200 || data.error) {
-        setError("⚠️ Evaluation failed. Please try again.");
-        return;
-      }
-
       setHighlightedAnswer(data.highlighted_answer || "");
-      const playerInfo = JSON.parse(localStorage.getItem("playerInfo"));
 
       if (data.score >= 0.95) {
         setFeedback("✅ Excellent! You've nailed it.");
         setHint(`💡 Hint: ${questionData.hint}`);
+        const playerInfo = JSON.parse(localStorage.getItem("playerInfo"));
 
-        // Trigger win if Q10
         if (questionData.order == 10) {
           socket.emit("game_over", {
             winner: playerInfo.username,
-            murderers: players.filter(p => p.role === "murderer").map(p => p.username),
+            murderers: players.filter((p) => p.role === "murderer").map((p) => p.username),
           });
         } else {
           socket.emit("question_correct", { sid: mySID });
@@ -214,8 +207,22 @@ const Game = () => {
   return (
     <div className="game-container">
       {players.map((player, index) => (
-        <div key={index} className="player" style={{ left: player.x, top: player.y }}>
-          <img src={`/character_images/${player.character}`} alt={player.username} className="player-image" />
+        <div
+          key={index}
+          className="player"
+          style={{
+            left: player.x,
+            top: player.y,
+            width: playerSize,
+            height: playerSize,
+          }}
+        >
+          <img
+            src={`/character_images/${player.character}`}
+            alt={player.username}
+            className="player-image"
+            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+          />
           <p className="player-name">{player.username}</p>
         </div>
       ))}
@@ -234,17 +241,19 @@ const Game = () => {
           <div className="popup-box">
             <h2>📘 Question at {questionData.location}</h2>
             <p>{questionData.question}</p>
-            <textarea placeholder="Type your SQL answer here..." value={userAnswer} onChange={(e) => setUserAnswer(e.target.value)} />
+            <textarea
+              placeholder="Type your SQL answer here..."
+              value={userAnswer}
+              onChange={(e) => setUserAnswer(e.target.value)}
+            />
             <button onClick={handleSubmit}>Submit</button>
             {error && <p className="feedback error">{error}</p>}
-            {/* {feedback && <p className="feedback">{feedback}</p>} */}
-            {feedback && <p className="feedback">{}</p>}
+            {feedback && <p className="feedback">{feedback}</p>}
             {hint && <p className="hint">{hint}</p>}
             {highlightedAnswer && (
               <div className="highlighted-box">
                 <strong>✅ Answer Reference:</strong>
                 <p dangerouslySetInnerHTML={{ __html: highlightedAnswer }} />
-                {/* <p dangerouslySetInnerHTML={{ __html: '' }} /> */}
               </div>
             )}
             <button className="close-btn" onClick={() => setShowQuestion(false)}>
@@ -267,7 +276,7 @@ const Game = () => {
         </div>
       )}
 
-      {window.innerWidth < 768 && (
+      {isMobile && (
         <div className="joystick-container">
           <Joystick
             size={80}

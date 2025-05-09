@@ -5,7 +5,7 @@
 import eventlet
 eventlet.monkey_patch()
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, redirect, url_for, session
 from flask_cors import CORS
 from sentence_transformers import SentenceTransformer, util
 import torch
@@ -19,18 +19,134 @@ from nltk.data import find
 from models import (
     db, MCQQuestion, DragDropQuestion, DragDrop100Question,
     TextAnswerQuestion, SQLMCQStructured, SQLDragDrop,
-    SQLTextAnswerQuestion, DTDQuestion, GameQuestion, Player
+    SQLTextAnswerQuestion, DTDQuestion, GameQuestion, Player, db, User
 )
 from sqlalchemy import func
 from sqlalchemy.pool import NullPool
 from socket_handler import socketio  # ✅ Only import socketio
 from socket_handler import get_all_players
 
+from dotenv import load_dotenv
+from flask_dance.contrib.google import make_google_blueprint, google
+from flask_dance.contrib.github import make_github_blueprint, github
+from werkzeug.security import generate_password_hash, check_password_hash
+
+
 # ----------------------------
 # App Initialization
 # ----------------------------
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+
+
+load_dotenv()
 app = Flask(__name__)
-CORS(app)
+app.secret_key = os.environ.get("SECRET_KEY", "supersecret")
+
+# app = Flask(__name__)
+# CORS(app, supports_credentials=True)
+# app.secret_key = os.environ.get("SECRET_KEY", "supersecret")
+# Allow frontend origin (Vercel) access
+# CORS(app, resources={r"/api/*": {"origins": [FRONTEND_URL]}}, supports_credentials=True)
+
+CORS(app, supports_credentials=True, origins=[
+    "http://localhost:5173",
+    "http://10.0.0.165:5173",
+    "https://neuralearn-one.vercel.app",
+    "https://neuralearn-l1igduebm-josephs-projects-84a0d8a1.vercel.app",
+    "https://neuralearn.online",
+    "https://www.neuralearn.online",
+])
+
+
+# Google OAuth
+google_bp = make_google_blueprint(
+    client_id=os.environ["GOOGLE_CLIENT_ID"],
+    client_secret=os.environ["GOOGLE_CLIENT_SECRET"],
+    redirect_url="/login/google/callback",
+    scope=["profile", "email"]
+)
+app.register_blueprint(google_bp, url_prefix="/login")
+
+# GitHub OAuth
+github_bp = make_github_blueprint(
+    client_id=os.environ["GITHUB_CLIENT_ID"],
+    client_secret=os.environ["GITHUB_CLIENT_SECRET"],
+    redirect_url="/login/github/callback"
+)
+app.register_blueprint(github_bp, url_prefix="/login")
+
+@app.route("/login/google/callback")
+def google_login_callback():
+    if not google.authorized:
+        return redirect("/login/google")
+    resp = google.get("/oauth2/v2/userinfo")
+    data = resp.json()
+    email = data["email"]
+    name = data["name"]
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        user = User(username=name, email=email)
+        db.session.add(user)
+        db.session.commit()
+
+    return redirect(f"{FRONTEND_URL}/playground?username={name}&email={email}")
+
+@app.route("/login/github/callback")
+def github_login_callback():
+    if not github.authorized:
+        return redirect("/login/github")
+    resp = github.get("/user")
+    data = resp.json()
+    email = data.get("email") or f"{data['login']}@github"
+    name = data["login"]
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        user = User(username=name, email=email)
+        db.session.add(user)
+        db.session.commit()
+
+    return redirect(f"{FRONTEND_URL}/playground?username={name}&email={email}")
+
+
+@app.route("/api/register", methods=["POST"])
+def register_user():
+    data = request.json
+    email = data.get("email")
+    username = data.get("username")
+    password = data.get("password")
+
+    if not email or not username or not password:
+        return jsonify({"success": False, "message": "Missing fields"}), 400
+
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        return jsonify({"success": False, "message": "Email already registered"}), 400
+
+    hashed_pw = generate_password_hash(password)
+    new_user = User(email=email, username=username, password=hashed_pw)
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({"success": True, "user_id": new_user.id, "username": new_user.username})
+
+
+@app.route("/api/login", methods=["POST"])
+def login_user():
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"success": False, "message": "User not found"}), 404
+    elif not user.password:
+        return jsonify({"success": False, "message": "Please log in using Google or GitHub"}), 400
+
+
+    return jsonify({"success": True, "user_id": user.id, "username": user.username})
+
 
 # ----------------------------
 # Configuration
