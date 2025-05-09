@@ -19,11 +19,11 @@ from nltk.data import find
 from models import (
     db, MCQQuestion, DragDropQuestion, DragDrop100Question,
     TextAnswerQuestion, SQLMCQStructured, SQLDragDrop,
-    SQLTextAnswerQuestion, DTDQuestion, GameQuestion, Player, db, User
+    SQLTextAnswerQuestion, DTDQuestion, GameQuestion, Player, User
 )
 from sqlalchemy import func
 from sqlalchemy.pool import NullPool
-from socket_handler import socketio  # ✅ Only import socketio
+from socket_handler import socketio  
 from socket_handler import get_all_players
 
 from dotenv import load_dotenv
@@ -58,7 +58,18 @@ CORS(app, supports_credentials=True, origins=[
 # Add this after initializing Flask and CORS
 @app.after_request
 def add_cors_headers(response):
-    response.headers.add("Access-Control-Allow-Origin", request.headers.get("Origin") or "*")
+    origin = request.headers.get("Origin")
+    allowed_origins = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://10.0.0.165:5173",
+        "https://neuralearn-one.vercel.app",
+        "https://neuralearn-l1igduebm-josephs-projects-84a0d8a1.vercel.app",
+        "https://neuralearn.online",
+        "https://www.neuralearn.online",
+    ]
+    if origin in allowed_origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
     response.headers.add("Access-Control-Allow-Credentials", "true")
     response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
     response.headers.add("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
@@ -138,6 +149,11 @@ def register_user():
     db.session.commit()
 
     return jsonify({"success": True, "user_id": new_user.id, "username": new_user.username})
+
+
+@app.route("/api/register", methods=["OPTIONS"])
+def register_preflight():
+    return '', 200
 
 
 @app.route("/api/login", methods=["POST"])
