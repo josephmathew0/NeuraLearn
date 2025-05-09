@@ -35,21 +35,17 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # ----------------------------
 # App Initialization
 # ----------------------------
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
-
 
 load_dotenv()
+
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "supersecret")
 
-# app = Flask(__name__)
-# CORS(app, supports_credentials=True)
-# app.secret_key = os.environ.get("SECRET_KEY", "supersecret")
-# Allow frontend origin (Vercel) access
-# CORS(app, resources={r"/api/*": {"origins": [FRONTEND_URL]}}, supports_credentials=True)
-
 CORS(app, supports_credentials=True, origins=[
     "http://localhost:5173",
+    "http://127.0.0.1:5173",
     "http://10.0.0.165:5173",
     "https://neuralearn-one.vercel.app",
     "https://neuralearn-l1igduebm-josephs-projects-84a0d8a1.vercel.app",
@@ -57,6 +53,18 @@ CORS(app, supports_credentials=True, origins=[
     "https://www.neuralearn.online",
 ])
 
+
+
+# Add this after initializing Flask and CORS
+@app.after_request
+def add_cors_headers(response):
+    response.headers.add("Access-Control-Allow-Origin", request.headers.get("Origin") or "*")
+    response.headers.add("Access-Control-Allow-Credentials", "true")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
+    response.headers.add("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+    return response
+
+    
 
 # Google OAuth
 google_bp = make_google_blueprint(
@@ -143,9 +151,19 @@ def login_user():
         return jsonify({"success": False, "message": "User not found"}), 404
     elif not user.password:
         return jsonify({"success": False, "message": "Please log in using Google or GitHub"}), 400
+    elif not check_password_hash(user.password, password):
+        return jsonify({"success": False, "message": "Incorrect password"}), 401
 
+    # ✅ If all checks passed, return a success response
+    return jsonify({
+        "success": True,
+        "user_id": user.id,
+        "username": user.username
+})
 
-    return jsonify({"success": True, "user_id": user.id, "username": user.username})
+@app.route("/api/login", methods=["OPTIONS"])
+def login_preflight():
+    return '', 200
 
 
 # ----------------------------
